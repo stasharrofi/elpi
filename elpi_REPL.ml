@@ -12,6 +12,7 @@ let _ =
   Gc.set tweaked_control
 ;;
 *)
+open Elpi
 
 module Str = Re.Str
 
@@ -56,7 +57,6 @@ let usage =
   "\t-delay-problems-outside-pattern-fragment (deprecated, for Teyjus compatibility)\n" ^
   "\t-test runs the query \"main\"\n" ^ 
   "\t-exec pred  runs the query \"pred args\"\n" ^ 
-  "\t-where print system wide installation path then exit\n" ^ 
   "\t-print prints files after desugar, then exit\n" ^ 
   "\t-print-ast prints files as parsed, then exit\n" ^ 
   "\t-D var  Define variable (conditional compilation)\n" ^ 
@@ -78,8 +78,6 @@ let _ =
   let delay_outside_fragment = ref false in 
   let vars =
     ref Elpi_API.Compile.(default_flags.defined_variables) in
-  if List.mem "-where" (Array.to_list Sys.argv) then begin
-    Printf.printf "%s\n" Elpi_config.install_dir; exit 0 end;
   let rec aux = function
     | [] -> []
     | "-q" :: rest -> silent := true; aux rest
@@ -103,7 +101,10 @@ let _ =
     let v = try Sys.getenv "TJPATH" with Not_found -> "" in
     let tjpath = Str.split (Str.regexp ":") v in
     List.flatten (List.map (fun x -> ["-I";x]) tjpath) in
-  let installpath = [ "-I"; Elpi_config.install_dir ] in
+  let installpath = 
+    let v = try Sys.getenv "OCAMLPATH" with Not_found -> "" in
+    let ocamlpath = Str.split (Str.regexp ":") v in
+    List.flatten (List.map (fun x -> ["-I";x^"/elpi/"]) ocamlpath) in
   let execpath = ["-I"; Filename.dirname (Sys.executable_name)] in
   let opts = Array.to_list Sys.argv @ tjpath @ installpath @ execpath in
   let pheader, argv = Elpi_API.Setup.init ~silent:!silent ~builtins:Elpi_builtin.std_builtins opts ~basedir:cwd in

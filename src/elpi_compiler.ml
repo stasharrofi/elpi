@@ -4,7 +4,7 @@
 
 open Elpi_util
 open Elpi_data
-open Elpi_runtime_trace_off.Elpi_runtime
+open Elpi_runtime_trace_off
 open Pp
 
 module C = Constants
